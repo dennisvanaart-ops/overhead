@@ -20,6 +20,7 @@ export interface Aircraft {
 export interface UserLocation {
   latitude: number;
   longitude: number;
+  label?: string; // leesbare naam, bijv. "Amsterdam" of "1012 AB"
 }
 
 export interface FlightDetail {

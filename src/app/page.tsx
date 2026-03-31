@@ -13,7 +13,16 @@ import EmptyState from "@/components/EmptyState";
 const RADIUS_KM = 50;
 
 export default function Home() {
-  const { location, error: locationError, loading: locationLoading, requestLocation } = useLocation();
+  const {
+    location,
+    locationLabel,
+    gpsError,
+    gpsLoading,
+    setLocation,
+    clearLocation,
+    requestGPS,
+  } = useLocation();
+
   const { aircraft, loading: aircraftLoading, error: aircraftError, errorType, lastUpdated } = useAircraft(location, RADIUS_KM);
   const [selectedIcao, setSelectedIcao] = useState<string | null>(null);
 
@@ -36,12 +45,14 @@ export default function Home() {
     setSelectedIcao(icao);
   }, []);
 
+  // Geen locatie → toon invoerscherm (blokkeert de rest van de app)
   if (!location) {
     return (
       <LocationPrompt
-        onRequestLocation={requestLocation}
-        loading={locationLoading}
-        error={locationError}
+        onLocationFound={(lat, lon, label) => setLocation(lat, lon, label)}
+        onRequestGPS={requestGPS}
+        gpsLoading={gpsLoading}
+        gpsError={gpsError}
       />
     );
   }
@@ -70,6 +81,16 @@ export default function Home() {
               })}
             </time>
           )}
+          {/* Locatie-indicator met wijzig-knop */}
+          <button
+            onClick={clearLocation}
+            title="Locatie wijzigen"
+            className="flex items-center gap-1 text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <span className="max-w-[120px] truncate">{locationLabel || "Locatie"}</span>
+            <span className="text-gray-300">·</span>
+            <span className="underline underline-offset-2">wijzig</span>
+          </button>
         </div>
       </header>
 
