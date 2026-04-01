@@ -1,17 +1,21 @@
-# Vliegtuig Tracker
+# Overhead
 
 Realtime webapp die laat zien welke vliegtuigen er boven en rond jouw locatie vliegen.
 
 ## Features
 
-- Locatie-gebaseerd: vraagt browser permission en toont vliegtuigen in een straal van 50km
+- Locatie-instelling via plaatsnaam of postcode (geocoding) — werkt ook zonder GPS
+- GPS als optionele secundaire locatiemethode
+- Locatie wordt opgeslagen in localStorage; bij terugkeer direct actief
 - Primaire weergave: het meest relevante vliegtuig (dichtstbij of recht boven je)
 - Secundaire lijst: overige toestellen in de buurt
 - Automatische refresh elke 15 seconden
-- Responsive: werkt op desktop en mobiel
+- Responsive: werkt op desktop, mobiel, tablet en apparaten zonder GPS
 - Geen API-sleutel vereist
 
 ## Data
+
+### Vliegtuigdata
 
 Gebruikt [adsb.lol](https://adsb.lol/) voor realtime ADS-B vliegtuigdata.
 adsb.lol is een gratis, community-gedreven ADS-B aggregator zonder authenticatie.
@@ -26,6 +30,24 @@ Per vliegtuig zijn direct beschikbaar:
 - Registratie (staartletters)
 - Vliegtuigtype (bijv. "Airbus A320")
 - Operator/airline naam (indien beschikbaar in ADS-B data)
+
+### Airport reference dataset
+
+De app gebruikt een volledige, lokale airport reference dataset gebaseerd op
+[OurAirports](https://ourairports.com/data/) (publiek domein).
+
+- **8 164 luchthavens** wereldwijd
+- Velden per record: ICAO, IATA, naam, stad, ISO-landcode
+- IATA is de standaard weergave in de UI (bijv. `AMS`, `LHR`, `JFK`)
+- ICAO dient alleen als fallback als geen IATA-code beschikbaar is
+- Lookup via twee in-memory Maps (ICAO→airport, IATA→airport), opgebouwd bij server-start
+- Dataset wordt server-side geladen (API-routes); zit niet in de client-bundle
+
+### Geocoding
+
+Plaatsnamen en postcodes worden omgezet naar coördinaten via
+[Nominatim](https://nominatim.openstreetmap.org/) (OpenStreetMap), proxied via een
+interne Next.js API-route.
 
 ## Lokaal draaien
 
@@ -43,27 +65,34 @@ Geen `.env`-bestand vereist.
 ```
 src/
 ├── app/
-│   ├── api/aircraft/
-│   │   ├── route.ts              # Proxy naar adsb.lol
-│   │   └── [icao24]/route.ts    # Statische airline lookup per callsign
+│   ├── api/
+│   │   ├── aircraft/
+│   │   │   ├── route.ts              # Proxy naar adsb.lol
+│   │   │   └── [icao24]/route.ts    # Airline + route lookup per vliegtuig
+│   │   └── geocode/route.ts         # Nominatim geocoding proxy
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx                  # Hoofdpagina
+│   └── page.tsx                      # Hoofdpagina
 ├── components/
-│   ├── OverheadCard.tsx          # Primaire vliegtuigweergave
-│   ├── NearbyList.tsx            # Lijst nabije toestellen
-│   ├── EmptyState.tsx            # Fout- en leegstaat
-│   └── LocationPrompt.tsx        # Locatietoestemming
+│   ├── OverheadCard.tsx              # Primaire vliegtuigweergave
+│   ├── NearbyList.tsx                # Lijst nabije toestellen
+│   ├── EmptyState.tsx                # Fout- en leegstaat
+│   └── LocationPrompt.tsx            # Locatie-invoerscherm (geocoding + GPS)
+├── data/
+│   ├── airports.json                 # 8 164 luchthavens (OurAirports, publiek domein)
+│   └── airports.ts                   # TypeScript-interface + JSON-import
 ├── hooks/
-│   ├── useAircraft.ts            # Data fetching + auto-refresh
-│   ├── useFlightDetail.ts        # Airline lookup + vluchtdetails
-│   └── useLocation.ts            # Browser geolocation
+│   ├── useAircraft.ts                # Data fetching + auto-refresh
+│   ├── useFlightDetail.ts            # Airline lookup + vluchtdetails
+│   └── useLocation.ts                # Locatie via localStorage, geocoding of GPS
 ├── lib/
-│   ├── adsb.ts                   # adsb.lol API client + normalisatie
-│   ├── geo.ts                    # Afstandsberekening en relevantie-scoring
-│   └── airlines.ts               # Statische ICAO → airline mapping
+│   ├── adsb.ts                       # adsb.lol API client + normalisatie
+│   ├── airportResolver.ts            # ICAO/IATA lookup via lokale dataset
+│   ├── geocode.ts                    # Geocoding helper (client-side)
+│   ├── geo.ts                        # Afstandsberekening en relevantie-scoring
+│   └── airlines.ts                   # Statische ICAO → airline mapping
 └── types/
-    └── aircraft.ts               # Gedeeld Aircraft-model
+    └── aircraft.ts                   # Gedeeld Aircraft-model
 ```
 
 ## Stack
@@ -72,39 +101,20 @@ src/
 - TypeScript
 - Tailwind CSS
 - adsb.lol API (gratis, geen authenticatie)
+- OurAirports dataset (publiek domein)
+- Nominatim geocoding (OpenStreetMap)
 
 ---
 
-## Beperkingen en deployment notes
+## Deployment notes
 
-### Waarom niet meer OpenSky?
+### adsb.lol beperkingen
 
-OpenSky Network vereist OAuth2-credentials die niet meer direct beschikbaar zijn
-via zelfregistratie — toegang moet worden aangevraagd en handmatig worden goedgekeurd.
-Bovendien blokkeert OpenSky actief verzoeken vanuit bekende cloud-IP-ranges.
-adsb.lol biedt vergelijkbare data zonder deze drempels.
-
-### Beperkingen van adsb.lol (gratis)
-
-- **Geen SLA**: de dienst is community-gedreven en kan tijdelijk onbeschikbaar zijn
-- **Geen route-informatie**: vertrek- en aankomstluchthaven zijn niet beschikbaar
-- **Geen historische data**: alleen live/near-realtime data
-- **Dekkingsgaten**: ADS-B-ontvangst is afhankelijk van grondstations; dunne gebieden
-  kunnen minder toestellen tonen
-- **Rate limits**: onbekend/informeel; bij intensief gebruik of bij problemen treedt
-  automatisch retry in werking
-
-### Toekomstige verrijking
-
-De databron is geïsoleerd in `src/lib/adsb.ts` en het interne `Aircraft`-type in
-`src/types/aircraft.ts`. Een verrijkingsbron toevoegen (bijv. voor route-info of
-luchthavennamen) kan zonder wijzigingen in componenten of hooks:
-
-1. Voeg een nieuwe service toe in `src/lib/`
-2. Roep die aan vanuit `/api/aircraft/[icao24]/route.ts`
-3. Het `FlightDetail`-type heeft al velden voor `departureAirport` en `arrivalAirport`
+- **Geen SLA**: community-gedreven, kan tijdelijk onbeschikbaar zijn
+- **Dekkingsgaten**: ADS-B-ontvangst afhankelijk van grondstations
+- **Rate limits**: onbekend/informeel; automatisch retry bij problemen
 
 ### Hosting
 
-adsb.lol is doorgaans bereikbaar vanuit cloudplatforms. Mocht dit veranderen,
-pas dan alleen `src/lib/adsb.ts` aan — de rest van de app is bronagnostisch.
+adsb.lol is doorgaans bereikbaar vanuit cloudplatforms.
+Pas bij databronwijziging alleen `src/lib/adsb.ts` aan — de rest is bronagnostisch.
