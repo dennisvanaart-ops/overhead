@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>Overhead</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Scherm 1 — Locatie instellen (eerste keer of na reset)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-location" class="screen">
+    <div class="loc-box">
+      <div class="loc-logo">Overhead</div>
+      <p class="loc-tagline">Welke vliegtuigen vliegen er nu boven of dichtbij jou?</p>
+
+      <label class="field-label" for="loc-input">Voer je locatie in</label>
+      <input id="loc-input"
+             type="text"
+             class="loc-input"
+             placeholder="Plaatsnaam of postcode"
+             autocomplete="off"
+             spellcheck="false">
+
+      <button id="loc-btn" class="btn-primary">Locatie instellen</button>
+      <p id="loc-error" class="error-msg" hidden></p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Scherm 2 — Hoofdweergave
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-main" class="screen" hidden>
+
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <header class="tv-header">
+      <span class="hdr-brand">OVERHEAD</span>
+      <div class="hdr-right">
+        <span id="hdr-count" class="hdr-meta"></span>
+        <span id="hdr-time"  class="hdr-meta hdr-time"></span>
+        <button id="change-loc-btn" class="btn-ghost" title="Locatie wijzigen">
+          <span id="hdr-label"></span>
+          <span class="hdr-sep">·</span>
+          <span>wijzig</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Hoofdinhoud ─────────────────────────────────────────────────── -->
+    <main class="tv-main">
+
+      <!-- Lege / laadstatus -->
+      <div id="empty-state" class="empty-state" hidden>
+        <p id="empty-msg" class="empty-msg">Laden…</p>
+      </div>
+
+      <!-- Vliegtuigkaart -->
+      <div id="ac-card" class="ac-card" hidden>
+
+        <!-- Airline + callsign -->
+        <div class="card-top">
+          <span id="ac-airline"   class="ac-airline"></span>
+          <span id="ac-callsign"  class="ac-callsign"></span>
+        </div>
+
+        <!-- Route bar -->
+        <div id="route-bar" class="route-bar" hidden>
+          <div class="route-end">
+            <span id="dep-code" class="airport-code"></span>
+            <span id="dep-name" class="airport-name"></span>
+          </div>
+          <div class="route-line">
+            <div class="line-seg line-left"></div>
+            <span class="route-plane" aria-hidden="true">✈</span>
+            <div class="line-seg line-right"></div>
+          </div>
+          <div class="route-end route-end-right">
+            <span id="arr-code" class="airport-code"></span>
+            <span id="arr-name" class="airport-name"></span>
+          </div>
+        </div>
+
+        <!-- Vliegtuigtype -->
+        <div id="type-row" class="type-row" hidden>
+          <span id="ac-type" class="ac-type"></span>
+        </div>
+
+        <!-- Statistieken -->
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-label">Hoogte</span>
+            <span id="stat-alt"  class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Snelheid</span>
+            <span id="stat-spd"  class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Afstand</span>
+            <span id="stat-dist" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Registratie</span>
+            <span id="stat-reg"  class="stat-value">—</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ── Nabije toestellen ───────────────────────────────────────────── -->
+    <footer class="tv-footer">
+      <ul id="nearby-list" class="nearby-list"></ul>
+    </footer>
+
+  </div>
+
+  <script src="js/airports.js"></script>
+  <script src="js/airlines.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

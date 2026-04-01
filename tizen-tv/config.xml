@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="https://github.com/dennisvanaart-ops/overhead"
+        version="1.0.0"
+        viewmodes="fullscreen">
+
+  <name>Overhead</name>
+  <description>Welke vliegtuigen vliegen er nu boven of dichtbij jou?</description>
+
+  <!-- Tizen application identity
+       Package-id: precies 10 alfanumerieke tekens
+       App-id:     package-id + "." + naam -->
+  <tizen:application id="overheadtv.Overhead"
+                     package="overheadtv"
+                     required_version="4.0"/>
+
+  <content src="index.html"/>
+
+  <!-- Icoon: moet een PNG zijn (128×128 minimum).
+       Zie images/icon.svg voor bronbestand. -->
+  <icon src="images/icon.png"/>
+
+  <!-- Netwerktoegang: adsb.lol en Nominatim geocoding -->
+  <tizen:privilege name="http://tizen.org/privilege/internet"/>
+  <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+
+  <!-- Toestaan van fetch-calls naar externe API's -->
+  <access origin="https://api.adsb.lol" subdomains="false"/>
+  <access origin="https://nominatim.openstreetmap.org" subdomains="false"/>
+
+  <tizen:setting screen-orientation="landscape"
+                 context-menu="disable"
+                 background-support="disable"
+                 encryption="disable"
+                 install-location="auto"
+                 hw-key-event="true"/>
+
+</widget>
